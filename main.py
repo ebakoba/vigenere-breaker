@@ -113,24 +113,6 @@ def pureBruteForce(cipher_text):
       if index_of_coincidence > 0.064:
         break
 
-app = Flask(__name__)
-
-def make_app():
-    app = Flask(__name__)
-
-    @app.route('/')
-    def index():
-        return render_template('./index.html')
-
-    @app.route('/crack', methods = ['POST'])
-    def decrypter():
-        request.accept_mimetypes['application/json']
-        cipher_text = request.get_json()['cipher_text']
-        result = crackCipherText(cipher_text)
-        return jsonify(result)
-
-    return app
-
 def crackCipherText(cipher_text):
   tasks = [[tryKeysFromFile, './words/all.txt', cipher_text], [tryKeysFromFile, './words/10000-popular.txt', cipher_text], [pureBruteForce, cipher_text]]
   with concurrent.futures.ProcessPoolExecutor(max_workers=5) as worker_pool:
@@ -141,6 +123,24 @@ def crackCipherText(cipher_text):
       break
     kill_child_processes(os.getpid())
     return result
+
+app = Flask(__name__)
+
+def make_app():
+    app = Flask(__name__)
+
+    @app.route('/')
+    def index():
+        return render_template('./index.html')
+
+    @app.route('api/crack', methods = ['POST'])
+    def decrypter():
+        request.accept_mimetypes['application/json']
+        cipher_text = request.get_json()['cipher_text']
+        result = crackCipherText(cipher_text)
+        return jsonify(result)
+
+    return app
 
 if __name__ == '__main__':
   app = make_app()

@@ -41,7 +41,7 @@
       loader.style.display = 'block';
       dataHolder.style.display = 'none';
       if (textarea.value.length > 0) {
-        const response = await fetch('/crack', {
+        const response = await fetch('/api/crack', {
           headers: {
             'Accept': 'application/json',
             'Content-Type': 'application/json'
