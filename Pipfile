@@ -5,6 +5,8 @@ name = "pypi"
 
 [packages]
 psutil = "*"
+flask = "*"
+pylint-flask = "*"
 
 [dev-packages]
 pylint = "*"
