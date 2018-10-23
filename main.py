@@ -1,8 +1,25 @@
 
 import string
+import os
+from itertools import product
+import concurrent.futures
+import signal, psutil
+
+def kill_child_processes(parent_pid, sig=signal.SIGTERM):
+  try:
+    parent = psutil.Process(parent_pid)
+  except psutil.NoSuchProcess:
+    return
+  children = parent.children(recursive=True)
+  for process in children:
+    process.send_signal(sig)
 
 
 cipher_text = 'STOMZLATLPQBSUOUAVZHYPGMSURTHOMLAJWLLHFXKPHMAUUBFHGMJLSMKPRXUHTXOHHVZPBZHLCIDLUHAUUBFHBWUVABFNCNLVTTZVILWVBMZLCMZLFLAKSHXAVXKAFXWATBJZHMZLMLWLHPGWSHHSSZGPBZAUHHLOSAGBGXLPAXHHGLWZOYLLFTOOWEWAVXQUCMAJSMZYSXHLFLGUGVGTWGYVIMGMHAWOCNKLHAWWVRKPQBKAGTQZHAWPBBLPOEELOLMYSFWUHPSZBMSJQNJHHXLOSUAVZHYPGMKHMLLOSRZHJXJLDKGKIVWKHAWTOMZLATLPQBSUGTQZWYWEOVLSMHFLDXJZCGWUHXJZHAWOCNKLHAWUWMOPZETLSFHAMTYHWGOOSGZLBKQRWLKPBZWYZXXAVTJCOKVHBWOLBMLVKTKOWGYACGLVGXJCSBFAVXFPLHFHRFAUWLLYOMAVBAWDOLSZYXVIMHFLVBKUSPUVZEWHUNWZOUGBHMZLDHDAWVSSWGXPUALPBZAUOVSKSFAHWGOHGAAUUMGUKXJLTTEVILXVFIGSWMAJOEAUHKANIXAAGHMYXHTZCFWVBXSZYXVIIMOLFXHPYXJZQHEWOKWKHHLOSUSJYLLHPUAUUTFKRBJAMIGSWMAJGTLBBBNLFLAAWXKDVRVVMHMWSHHSSYANVMDPYXLOOMCPGLAUUXJPGLSPRMGOOOWYSLHVBWWKWGZPGEGDUKSCSEDFJHAJSBLZPXUHILWAVXKAODWZOKWZCEGD'
+
+def generateBruteforceKeys(length):
+  return [''.join(test) for test in product(string.ascii_uppercase, repeat=length)]
+  
 
 def calculateIndexOfCoincidence(text):
   text_length = len(text)
@@ -32,10 +49,16 @@ def cosetsIndexOfCoincidence(co_sets):
   avarage_coincidence = sum(indexes) / float(len(indexes))
   return avarage_coincidence
 
-for lenght in range(1, 20):
-  coincidence = cosetsIndexOfCoincidence(findCosets(cipher_text, lenght))
-  print(lenght, '-', coincidence)
-
+def getCoincidencesForKeyLengths(text, key_length_range):
+  coincidences = []
+  for lenght in key_length_range:
+    coincidence = cosetsIndexOfCoincidence(findCosets(text, lenght))
+    coincidences.append({'coincidence': coincidence, 'length': lenght})
+  
+  
+  coincidences = sorted(coincidences, key=lambda k: k['coincidence'], reverse=True)
+  lengths = [length_coincidence_pair['length'] for length_coincidence_pair in coincidences]
+  return lengths
 
 def decryptVigenerCypher(key, cipher_text):
   key = key.upper()
@@ -57,14 +80,70 @@ def decryptVigenerCypher(key, cipher_text):
 
   return ''.join(translated)
 
-def load_words(filename):
-    with open('./words/{}'.format(filename)) as word_file:
-        valid_words = set(word_file.read().split())
+def load_words(file_path):
+  with open(file_path) as word_file:
+      valid_words = set(word_file.read().split())
+  return valid_words
 
-    return valid_words
+def ensureCartesianProductFile(file_path):
+  if not os.path.isfile(file_path):
+    test_file = open(file_path, 'w')
+    for test_string in generateBruteforceKeys(4):
+      test_file.write('{}\n'.format(test_string))
+    test_file.close()
 
+def tryKeysFromFile(file_path):
+  for key in load_words(file_path):
+    index_of_coincidence = calculateIndexOfCoincidence(decryptVigenerCypher(key, cipher_text))
+    if index_of_coincidence > 0.064:
+      plain_text = decryptVigenerCypher(key, cipher_text)
+      if plain_text.count('THE') > 5:
+        return {
+          'key': key,
+          'plain_text': plain_text
+        }
 
+def pureBruteForce():
+  sorted_lenghts = getCoincidencesForKeyLengths(cipher_text, range(1, 10))
+  for lenght in sorted_lenghts:
+    directory = '.tmp'
+    if not os.path.exists(directory):
+      os.makedirs(directory)
+    file_path = os.path.join(directory, 'cartprod_{}.txt'.format(lenght))
+    for test_key in tryKeysFromFile(file_path):
+      index_of_coincidence = calculateIndexOfCoincidence(decryptVigenerCypher(test_key, cipher_text))
+      if index_of_coincidence > 0.064:
+        print(index_of_coincidence)
+        print(test_key)
+        print(decryptVigenerCypher(test_key, cipher_text))
+        break
+
+def main():
+  tasks = [[tryKeysFromFile, './words/all.txt'], [tryKeysFromFile, './words/10000-popular.txt'], [pureBruteForce]]
+  with concurrent.futures.ProcessPoolExecutor(max_workers=5) as worker_pool:
+    futures = [worker_pool.submit(*task) for task in tasks]
+    for future in concurrent.futures.as_completed(futures):
+      # completed task is yielded first
+      result = future.result()
+      print('KEY', result['key'])
+      print('PLAIN TEXT', result['plain_text'])
+      break
+    kill_child_processes(os.getpid())
+
+if __name__ == '__main__':
+    main()
 '''
+sorted_lenghts = getCoincidencesForKeyLengths(cipher_text, range(1, 10))
+for lenght in sorted_lenghts:
+  for test_key in generateBruteforceKeys(lenght):
+    index_of_coincidence = calculateIndexOfCoincidence(decryptVigenerCypher(test_key, cipher_text))
+    if index_of_coincidence > 0.064:
+      print(index_of_coincidence)
+      print(test_key)
+      print(decryptVigenerCypher(test_key, cipher_text))
+      break
+
+
 for key in load_words('10000-popular.txt'):
   index_of_coincidence = calculateIndexOfCoincidence(decryptVigenerCypher(key, cipher_text))
   if index_of_coincidence > 0.064:
