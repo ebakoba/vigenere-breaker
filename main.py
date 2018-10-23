@@ -111,9 +111,6 @@ def pureBruteForce(cipher_text):
     for test_key in tryKeysFromFile(file_path, cipher_text):
       index_of_coincidence = calculateIndexOfCoincidence(decryptVigenerCypher(test_key, cipher_text))
       if index_of_coincidence > 0.064:
-        print(index_of_coincidence)
-        print(test_key)
-        print(decryptVigenerCypher(test_key, cipher_text))
         break
 
 app = Flask(__name__)
@@ -140,53 +137,11 @@ def crackCipherText(cipher_text):
     result = {'key': 'could not decrypt', 'plainText': 'could not decrypt'}
     futures = [worker_pool.submit(*task) for task in tasks]
     for future in concurrent.futures.as_completed(futures):
-      # completed task is yielded first
       result = future.result()
-      print('KEY', result['key'])
-      print('PLAIN TEXT', result['plainText'])
       break
     kill_child_processes(os.getpid())
     return result
-#def main():
-'''
-  tasks = [[tryKeysFromFile, './words/all.txt'], [tryKeysFromFile, './words/10000-popular.txt'], [pureBruteForce]]
-  with concurrent.futures.ProcessPoolExecutor(max_workers=5) as worker_pool:
-    futures = [worker_pool.submit(*task) for task in tasks]
-    for future in concurrent.futures.as_completed(futures):
-      # completed task is yielded first
-      result = future.result()
-      print('KEY', result['key'])
-      print('PLAIN TEXT', result['plain_text'])
-      break
-    kill_child_processes(os.getpid())
-  '''
+
 if __name__ == '__main__':
   app = make_app()
   app.run(port=8080)
-'''
-sorted_lenghts = getCoincidencesForKeyLengths(cipher_text, range(1, 10))
-for lenght in sorted_lenghts:
-  for test_key in generateBruteforceKeys(lenght):
-    index_of_coincidence = calculateIndexOfCoincidence(decryptVigenerCypher(test_key, cipher_text))
-    if index_of_coincidence > 0.064:
-      print(index_of_coincidence)
-      print(test_key)
-      print(decryptVigenerCypher(test_key, cipher_text))
-      break
-
-
-for key in load_words('10000-popular.txt'):
-  index_of_coincidence = calculateIndexOfCoincidence(decryptVigenerCypher(key, cipher_text))
-  if index_of_coincidence > 0.064:
-    print(index_of_coincidence)
-    print(decryptVigenerCypher(key, cipher_text))
-    break
-
-for key in load_words('all.txt'):
-  index_of_coincidence = calculateIndexOfCoincidence(decryptVigenerCypher(key, cipher_text))
-  if index_of_coincidence > 0.064:
-    print(index_of_coincidence)
-    print(decryptVigenerCypher(key, cipher_text))
-    break
-
-'''
