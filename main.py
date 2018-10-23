@@ -12,9 +12,30 @@ def calculateIndexOfCoincidence(text):
   for character in alphabet:
     frequency = text.count(character)
     frequency_sum += frequency * ( frequency - 1)
-  
   index_of_coincidence = (1/(text_length * (text_length - 1))) * frequency_sum
   return index_of_coincidence
+
+def findCosets(text, lenght):
+  co_sets = []
+  for _ in range(0, lenght):
+    co_sets.append([])
+  
+  for index, character in enumerate(text):
+    co_set_index = index % lenght
+    co_sets[co_set_index].append(character)
+  return co_sets
+
+def cosetsIndexOfCoincidence(co_sets):
+  indexes = []
+  for co_set in co_sets:
+    indexes.append(calculateIndexOfCoincidence(''.join(co_set)))
+  avarage_coincidence = sum(indexes) / float(len(indexes))
+  return avarage_coincidence
+
+for lenght in range(1, 20):
+  coincidence = cosetsIndexOfCoincidence(findCosets(cipher_text, lenght))
+  print(lenght, '-', coincidence)
+
 
 def decryptVigenerCypher(key, cipher_text):
   key = key.upper()
@@ -42,6 +63,8 @@ def load_words(filename):
 
     return valid_words
 
+
+'''
 for key in load_words('10000-popular.txt'):
   index_of_coincidence = calculateIndexOfCoincidence(decryptVigenerCypher(key, cipher_text))
   if index_of_coincidence > 0.064:
@@ -55,3 +78,5 @@ for key in load_words('all.txt'):
     print(index_of_coincidence)
     print(decryptVigenerCypher(key, cipher_text))
     break
+
+'''
