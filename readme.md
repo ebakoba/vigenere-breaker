@@ -32,5 +32,6 @@
  * [Google 10000 most popular](https://github.com/first20hours/google-10000-english)
  * [Vigener decrypt algorithm in Python](https://inventwithpython.com/hacking/chapter19.html)
  * [Key length based on index of coincidence](https://pages.mtu.edu/~shene/NSF-4/Tutorial/VIG/Vig-IOC-Len.html)
+ * [Inspiration for frequency score calculation](https://inventwithpython.com/hacking/chapter20.html)
  * [Help in parallel processing](https://stackoverflow.com/questions/30384568/how-to-get-the-first-finished-async-result-from-pool)
  * [Killing parallel processes](https://stackoverflow.com/questions/42782953/python-concurrent-futures-how-to-make-it-cancelable/45515052#45515052)

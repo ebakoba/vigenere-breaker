@@ -16,40 +16,49 @@
         <textarea cols="100" rows="15" id="cipher-text"></textarea>
         <br>
         <div style="display: flex; flex-direction: row;justify-content: flex-end;" >
-          <button id="crack-button" style="margin:0;" class="mdl-button mdl-js-button mdl-button--fab mdl-js-ripple-effect mdl-button--colored">
-            <i class="material-icons">lock_open</i>
+          <button id="bruteforce-crack-button" style="margin-right: 32px;" class="mdl-button mdl-js-button mdl-js-ripple-effect mdl-button--raised mdl-button--colored">
+            Bruteforce crack
+          </button>
+          <button id="frequency-crack-button" class="mdl-button mdl-js-button mdl-button--raised mdl-js-ripple-effect mdl-button--accent">
+            Frequency crack
           </button>
         </div>
       </div>
-      <div id="loader" style="width: 150px;height: 150px; display: none" class="mdl-spinner mdl-js-spinner is-active"></div>
-      <div id="data-holder" style="display: none">
-        <h4><b>Key: </b><span id="key"></span></h4>
-        <p style="max-width: 723px;word-wrap: break-word;"><b>Plain text:</b>
-          <span id="plain-text">
-          </span>
-        </p>
+      <br>
+      <br>
+      <div style="display: flex;flex-direction: row;flex-wrap: wrap;justify-content: center;" class="mdl-grid" id="candidates-holder">
       </div>
+      <div id="loader" style="width: 150px;height: 150px; display: none" class="mdl-spinner mdl-js-spinner is-active"></div>
       <div style="display:none;" id="error-holder">
         <h3 style="color:red;">
           <span id="error-message"></span>
         </h3>
       </div>
     </div>
+    <div id="template" style="display:none;width: 400px;margin-top: 32px;margin-bottom: 32px;">
+        <div class="demo-card-wide mdl-card mdl-shadow--16dp">
+          <div class="mdl-card__title">
+            <h2 class="mdl-card__title-text key"></h2>
+          </div>
+          <div class="mdl-card__supporting-text plain-text" style="word-wrap:break-word;">
+          </div>
+        </div>
+      </div>
   </body>
   <script>
     const loader = document.getElementById('loader');
     const textarea = document.getElementById('cipher-text');
-    const button = document.getElementById('crack-button');
-    const plainText = document.getElementById('plain-text');
-    const key = document.getElementById('key');
-    const dataHolder = document.getElementById('data-holder');
+    const frequencyButton = document.getElementById('frequency-crack-button');
+    const bruteforceButton = document.getElementById('bruteforce-crack-button');
     const errorHolder = document.getElementById('error-holder');
     const errorMessage = document.getElementById('error-message');
-    button.addEventListener('click', async (event) => {
+    const template = document.getElementById('template');
+    const candidatesHolder = document.getElementById('candidates-holder')
+    async function displayData(event, isFrequency) {
+      candidatesHolder.innerHTML = '';
       loader.style.display = 'block';
-      dataHolder.style.display = 'none';
       errorHolder.style.display = 'none';
-      const response = await fetch('/api/crack', {
+      const response = await fetch( isFrequency ? '/api/crack/frequency' : '/api/crack/bruteforce', {
         headers: {
           'Accept': 'application/json',
           'Content-Type': 'application/json'
@@ -62,14 +71,21 @@
       loader.style.display = 'none';
       if (response.ok) {
         const data = await response.json();
-        plainText.innerText = data.plainText;
-        key.innerText = data.key;
-        dataHolder.style.display = 'block';
+        console.log('data', data)
+        data.map((decryptionCandidate) => {
+          const decryptionElement = template.cloneNode(true)
+          decryptionElement.style.display = 'block'
+          decryptionElement.getElementsByClassName('key')[0].innerText = decryptionCandidate.key;
+          decryptionElement.getElementsByClassName('plain-text')[0].innerText = decryptionCandidate.plainText;
+          candidatesHolder.appendChild(decryptionElement);
+        })
       } else {
         errorHolder.style.display = 'block';
         const error = await response.json();
         errorMessage.innerText = error.message;
       }
-    });
+    }
+    frequencyButton.addEventListener('click', (event) => displayData(event, true));
+    bruteforceButton.addEventListener('click', (event) => displayData(event, false));
   </script>
 </html>

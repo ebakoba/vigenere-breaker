@@ -99,8 +99,72 @@ def tryKeysFromFile(file_path, cipher_text):
           'plainText': plain_text
         }
 
+def breakToSubstrings(text, length):
+  substrings = [[] for i in range(length)]
+  for index, character in enumerate(text):
+    substrings[index % length].append(character)
+  substrings = [ ''.join(substring) for substring in substrings]
+  return substrings
+
+def shiftStringByNumber(text, shift):
+  alphabet = string.ascii_uppercase
+  translated = []
+  for character in text:
+    number = (alphabet.find(character) + shift) % len(alphabet)
+    translated.append(alphabet[number])
+  return ''.join(translated)
+
+
+def calculateFrequencyScore(text):
+  alphabet = string.ascii_uppercase
+  frequencies = []
+  for character in alphabet:
+    frequencies.append({
+      'character': character,
+      'frequency': text.count(character),
+    })
+  frequencies = sorted(frequencies, key=lambda k: k['frequency'], reverse=True)
+  ordered_by_frequency = [d['character'] for d in frequencies]
+  common_frequency = 'ETAOINSHRDLCUMWFGYPBVKJXQZ'
+
+  match_score = 0
+  for commonLetter in common_frequency[:6]:
+    if commonLetter in ordered_by_frequency[:6]:
+      match_score += 1
+  for uncommonLetter in common_frequency[-6:]:
+    if uncommonLetter in ordered_by_frequency[-6:]:
+      match_score += 1
+  return match_score
+
+def frequencyCrack(cipher_text):
+  alphabet = string.ascii_uppercase
+  sorted_lenghts = getCoincidencesForKeyLengths(cipher_text, range(3, 10))
+  key_candidates = []
+  for lenght in sorted_lenghts:
+    key = []
+    for substring in breakToSubstrings(cipher_text, lenght):
+      for shift in range(1, len(alphabet)):
+        shifted_text = shiftStringByNumber(substring, shift)
+        score = calculateFrequencyScore(shifted_text)
+        if score > 6:
+          key.append(alphabet[26 - shift])
+    if len(key) == lenght:
+      key_candidates.append(''.join(key))
+  decryption_candidates = []
+  for key in key_candidates:
+    plain_text = decryptVigenerCypher(key, cipher_text)
+    decryption_candidates.append({
+      'key': key.upper(),
+      'plainText': plain_text
+    })
+  return decryption_candidates
+
+
+
+frequencyCrack('STOMZLATLPQBSUOUAVZHYPGMSURTHOMLAJWLLHFXKPHMAUUBFHGMJLSMKPRXUHTXOHHVZPBZHLCIDLUHAUUBFHBWUVABFNCNLVTTZVILWVBMZLCMZLFLAKSHXAVXKAFXWATBJZHMZLMLWLHPGWSHHSSZGPBZAUHHLOSAGBGXLPAXHHGLWZOYLLFTOOWEWAVXQUCMAJSMZYSXHLFLGUGVGTWGYVIMGMHAWOCNKLHAWWVRKPQBKAGTQZHAWPBBLPOEELOLMYSFWUHPSZBMSJQNJHHXLOSUAVZHYPGMKHMLLOSRZHJXJLDKGKIVWKHAWTOMZLATLPQBSUGTQZWYWEOVLSMHFLDXJZCGWUHXJZHAWOCNKLHAWUWMOPZETLSFHAMTYHWGOOSGZLBKQRWLKPBZWYZXXAVTJCOKVHBWOLBMLVKTKOWGYACGLVGXJCSBFAVXFPLHFHRFAUWLLYOMAVBAWDOLSZYXVIMHFLVBKUSPUVZEWHUNWZOUGBHMZLDHDAWVSSWGXPUALPBZAUOVSKSFAHWGOHGAAUUMGUKXJLTTEVILXVFIGSWMAJOEAUHKANIXAAGHMYXHTZCFWVBXSZYXVIIMOLFXHPYXJZQHEWOKWKHHLOSUSJYLLHPUAUUTFKRBJAMIGSWMAJGTLBBBNLFLAAWXKDVRVVMHMWSHHSSYANVMDPYXLOOMCPGLAUUXJPGLSPRMGOOOWYSLHVBWWKWGZPGEGDUKSCSEDFJHAJSBLZPXUHILWAVXKAODWZOKWZCEGD')
+
 def pureBruteForce(cipher_text):
-  sorted_lenghts = getCoincidencesForKeyLengths(cipher_text, range(1, 10))
+  sorted_lenghts = getCoincidencesForKeyLengths(cipher_text, range(3, 10))
   for lenght in sorted_lenghts:
     directory = '.tmp'
     if not os.path.exists(directory):
@@ -112,7 +176,7 @@ def pureBruteForce(cipher_text):
       if index_of_coincidence > 0.064:
         break
 
-def crackCipherText(cipher_text):
+def bruteforceCrack(cipher_text):
   tasks = [[tryKeysFromFile, './words/all.txt', cipher_text], [tryKeysFromFile, './words/10000-popular.txt', cipher_text], [pureBruteForce, cipher_text]]
   with concurrent.futures.ProcessPoolExecutor(max_workers=5) as worker_pool:
     result = {'key': 'could not decrypt', 'plainText': 'could not decrypt'}
