@@ -159,6 +159,7 @@ def frequencyCrack(cipher_text):
     })
   return decryption_candidates
 
+
 def pureBruteForce(cipher_text):
   sorted_lenghts = getCoincidencesForKeyLengths(cipher_text, range(3, 10))
   for lenght in sorted_lenghts:
@@ -174,11 +175,14 @@ def pureBruteForce(cipher_text):
 
 def bruteforceCrack(cipher_text):
   tasks = [[tryKeysFromFile, './words/all.txt', cipher_text], [tryKeysFromFile, './words/10000-popular.txt', cipher_text], [pureBruteForce, cipher_text]]
-  with concurrent.futures.ProcessPoolExecutor(max_workers=5) as worker_pool:
+  with concurrent.futures.ProcessPoolExecutor(max_workers=3) as worker_pool:
     result = {'key': 'could not decrypt', 'plainText': 'could not decrypt'}
     futures = [worker_pool.submit(*task) for task in tasks]
     for future in concurrent.futures.as_completed(futures):
-      result = future.result()
-      break
+      try:
+        result = future.result()
+        break
+      except:
+        return
     kill_child_processes(os.getpid())
     return result
