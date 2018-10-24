@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html style="height: 100%;">
   <head>
-    <title>Flask Template Example</title>
+    <title>Vigenere Cracker</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="data:image/png;base64,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" rel="icon" type="image/x-icon" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link rel="stylesheet" href="http://fonts.googleapis.com/css?family=Roboto:300,400,500,700" type="text/css">
     <link rel="stylesheet" href="https://code.getmdl.io/1.3.0/material.indigo-pink.min.css">
@@ -28,6 +29,11 @@
           </span>
         </p>
       </div>
+      <div style="display:none;" id="error-holder">
+        <h3 style="color:red;">
+          <span id="error-message"></span>
+        </h3>
+      </div>
     </div>
   </body>
   <script>
@@ -37,25 +43,32 @@
     const plainText = document.getElementById('plain-text');
     const key = document.getElementById('key');
     const dataHolder = document.getElementById('data-holder');
+    const errorHolder = document.getElementById('error-holder');
+    const errorMessage = document.getElementById('error-message');
     button.addEventListener('click', async (event) => {
       loader.style.display = 'block';
       dataHolder.style.display = 'none';
-      if (textarea.value.length > 0) {
-        const response = await fetch('/api/crack', {
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-          },
-          method: 'post',
-          body: JSON.stringify({
-            cipher_text: textarea.value,
-          })
-        });
+      errorHolder.style.display = 'none';
+      const response = await fetch('/api/crack', {
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json'
+        },
+        method: 'post',
+        body: JSON.stringify({
+          cipher_text: textarea.value,
+        })
+      });
+      loader.style.display = 'none';
+      if (response.ok) {
         const data = await response.json();
-        loader.style.display = 'none';
         plainText.innerText = data.plainText;
         key.innerText = data.key;
         dataHolder.style.display = 'block';
+      } else {
+        errorHolder.style.display = 'block';
+        const error = await response.json();
+        errorMessage.innerText = error.message;
       }
     });
   </script>

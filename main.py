@@ -1,5 +1,6 @@
 
 from vigenere_crypto import crackCipherText
+import json
 from flask import Flask, render_template, request, jsonify
 
 app = Flask(__name__)
@@ -15,8 +16,13 @@ def make_app():
     def decrypter():
         request.accept_mimetypes['application/json']
         cipher_text = request.get_json()['cipher_text']
-        result = crackCipherText(cipher_text)
-        return jsonify(result)
+        if len(cipher_text) < 100:
+          return json.dumps({ 'message': 'Too short cipher text' }), 500
+        try:
+          result = crackCipherText(str(cipher_text).upper())
+          return jsonify(result)
+        except:
+          return json.dumps({ 'message': 'Something went wrong in the server' }), 500
 
     return app
 
