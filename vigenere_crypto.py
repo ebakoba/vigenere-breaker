@@ -143,7 +143,7 @@ def frequencyCrack(cipher_text):
   for lenght in sorted_lenghts:
     key = []
     for substring in breakToSubstrings(cipher_text, lenght):
-      for shift in range(1, len(alphabet)):
+      for shift in range(1, len(alphabet) + 1):
         shifted_text = shiftStringByNumber(substring, shift)
         score = calculateFrequencyScore(shifted_text)
         if score > 6:
